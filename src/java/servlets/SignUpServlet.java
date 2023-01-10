@@ -2,6 +2,7 @@ package servlets;
 
 import models.UserProfile;
 import services.AccountService;
+import services.exceptions.AccountServiceException;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -9,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class SignUpServlet extends HttpServlet {
 
-    private AccountService accountService;
+    private final AccountService accountService;
 
     public SignUpServlet(AccountService accountService) {
         this.accountService = accountService;
@@ -25,7 +26,11 @@ public class SignUpServlet extends HttpServlet {
         if (isNotCorrectParameter(login) && isNotCorrectParameter(password)) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         } else {
-            accountService.addNewUser(new UserProfile(login, password));
+            try {
+                accountService.addUser(login, password);
+            } catch (AccountServiceException e) {
+                System.out.println(e.getMessage());
+            }
             resp.setStatus(HttpServletResponse.SC_OK);
         }
     }

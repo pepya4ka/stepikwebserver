@@ -3,6 +3,7 @@ package servlets;
 import com.google.gson.Gson;
 import models.UserProfile;
 import services.AccountService;
+import services.exceptions.AccountServiceException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -40,7 +41,7 @@ public class SignInServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String sessionId = req.getSession().getId();
         String login = req.getParameter("login");
         String password = req.getParameter("password");
@@ -50,7 +51,12 @@ public class SignInServlet extends HttpServlet {
         if (isNotCorrectParameter(login) && isNotCorrectParameter(password)) {
             setWriter(HttpServletResponse.SC_BAD_REQUEST, FORBIDDEN_MESSAGE, resp);
         } else {
-            UserProfile profile = accountService.getUserProfileByLogin(login);
+            UserProfile profile = null;
+            try {
+                profile = accountService.getUser(login);
+            } catch (AccountServiceException e) {
+                System.out.println(e.getMessage());
+            }
             if (profile != null && profile.getPassword().equals(password)) {
                 accountService.addSession(sessionId, profile);
                 setWriter(HttpServletResponse.SC_OK, OK_MESSAGE + login, resp);
@@ -61,7 +67,7 @@ public class SignInServlet extends HttpServlet {
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String sessionId = req.getSession().getId();
         UserProfile profile = accountService.getUserProfileBySessionId(sessionId);
         resp.setContentType("text/html;charset=utf-8");
