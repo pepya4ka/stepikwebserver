@@ -1,6 +1,5 @@
 package servlets;
 
-import models.UserProfile;
 import services.AccountService;
 import services.exceptions.AccountServiceException;
 
@@ -29,7 +28,7 @@ public class SignUpServlet extends HttpServlet {
             try {
                 accountService.addUser(login, password);
             } catch (AccountServiceException e) {
-                System.out.println(e.getMessage());
+                e.printStackTrace();
             }
             resp.setStatus(HttpServletResponse.SC_OK);
         }

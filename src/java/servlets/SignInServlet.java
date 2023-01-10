@@ -55,7 +55,7 @@ public class SignInServlet extends HttpServlet {
             try {
                 profile = accountService.getUser(login);
             } catch (AccountServiceException e) {
-                System.out.println(e.getMessage());
+                e.printStackTrace();
             }
             if (profile != null && profile.getPassword().equals(password)) {
                 accountService.addSession(sessionId, profile);

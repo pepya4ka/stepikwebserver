@@ -1,6 +1,5 @@
 package servlets;
 
-import com.google.gson.Gson;
 import models.UserProfile;
 import services.AccountService;
 import services.exceptions.AccountServiceException;
@@ -34,7 +33,7 @@ public class UsersServlet extends HttpServlet {
             try {
                 allUsers = accountService.getAllUsers();
             } catch (AccountServiceException e) {
-                System.out.println(e.getMessage());
+                e.printStackTrace();
             }
             resp.getWriter().println(
                     allUsers.stream()
