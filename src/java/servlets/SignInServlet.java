@@ -1,15 +1,17 @@
 package servlets;
 
-import com.google.gson.Gson;
 import models.UserProfile;
 import services.AccountService;
 import services.exceptions.AccountServiceException;
+import templater.PageGenerator;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignInServlet extends HttpServlet {
 
@@ -17,7 +19,7 @@ public class SignInServlet extends HttpServlet {
     private static String UNAUTHORIZED_MESSAGE = "Unauthorized";
     private static String FORBIDDEN_MESSAGE = "Bad request";
 
-    private AccountService accountService;
+    private final AccountService accountService;
 
     public SignInServlet(AccountService accountService) {
         this.accountService = accountService;
@@ -25,6 +27,8 @@ public class SignInServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Map<String, Object> pageVariables = new HashMap<>();
+
         String sessionId = req.getSession().getId();
 
         resp.setContentType("text/html;charset=utf-8");
@@ -33,15 +37,16 @@ public class SignInServlet extends HttpServlet {
         if (profile == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         } else {
-            Gson gson = new Gson();
-            String json = gson.toJson(profile);
-            resp.getWriter().println(json);
+            pageVariables.put("login", profile.getLogin());
+            resp.getWriter().println(PageGenerator.instance().getPage("profilePage.html", pageVariables));
             resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        Map<String, Object> pageVariables = new HashMap<>();
+
         String sessionId = req.getSession().getId();
         String login = req.getParameter("login");
         String password = req.getParameter("password");
@@ -59,24 +64,12 @@ public class SignInServlet extends HttpServlet {
             }
             if (profile != null && profile.getPassword().equals(password)) {
                 accountService.addSession(sessionId, profile);
-                setWriter(HttpServletResponse.SC_OK, OK_MESSAGE + login, resp);
+                pageVariables.put("login", login);
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.getWriter().println(PageGenerator.instance().getPage("profilePage.html", pageVariables));
             } else {
                 setWriter(HttpServletResponse.SC_UNAUTHORIZED, UNAUTHORIZED_MESSAGE, resp);
             }
-        }
-    }
-
-    @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String sessionId = req.getSession().getId();
-        UserProfile profile = accountService.getUserProfileBySessionId(sessionId);
-        resp.setContentType("text/html;charset=utf-8");
-        if (profile == null) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        } else {
-            accountService.deleteSession(sessionId);
-            resp.getWriter().println("Goodbye!");
-            resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
 
